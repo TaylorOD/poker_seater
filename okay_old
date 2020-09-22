@@ -1,8 +1,0 @@
-poker_players = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-
-
-10.times do
-   p poker_players.shuffle.first
-end
-
-# you will get 10 numbers. Assign them to each poker player. If the number is duplicated then ignore it.
