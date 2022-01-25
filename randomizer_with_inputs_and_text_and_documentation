@@ -27,6 +27,6 @@ puts "See the players below:"
 p poker_players_names.shuffle
 puts "--------"
 puts "Their seat number:"
-p poker_players.shuffle
+p poker_players
 puts "--------"
 puts "Shuffle em and deal!"
