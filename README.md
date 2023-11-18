@@ -1,7 +1,5 @@
 # Poker Seater
 
-# Poker Seater
-
 ## Why?
 
 I build this simple app for my weekly poker game. We needed a way to randomize where players were seated each week.
