@@ -6,7 +6,7 @@ I build this simple app for my weekly poker game. We needed a way to randomize w
 
 # How?
 
-This is a simple poker seat randomizer built in ruby. You can run it in your terminal, run the index.html file with live server, or visit www.pokerseater.com to use it.
+This is a simple poker seat randomizer built in ruby. You can run it in your terminal, run the index.html file with live server, or visit [poker seater](https://taylorod.github.io/poker_seater) to use it.
 You can enter names individually or as a comma separated list.
 
 # What tech?
