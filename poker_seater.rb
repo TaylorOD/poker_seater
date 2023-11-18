@@ -1,73 +1,72 @@
-# welcome message and creating arrays and index
-
+# Welcome message
 puts "Welcome to Poker Seat Randomizer!"
 puts "Please enter the names of the players one at a time: (enter 'done' when finished)"
 
+# Initialize arrays
 poker_players_names = []
 poker_players = []
 
+# Code to process name inputs and add them to poker_players_names
 index = 1
+max_players = 20  # Set the maximum number of players here
+displayed_message = false  # Boolean variable to track if the message has been displayed
 
-# code to process name inputs and add them to poker_players_names, code to add a number to poker_players for each name that is added, allows users to end before 10
-
-while index <= 20
-  input = gets.chomp
+while index <= max_players
+  input = gets.chomp.strip
   if input.downcase == "done"
     break
+  elsif input.empty? || input.strip.empty?
+    puts "Please enter a valid player name."
+    next
   end
+  
   poker_players_names << input
   poker_players << index
-  index = index + 1
+  index += 1
+
+  if index > 10 && !displayed_message
+    puts "You have entered more than ten players. The seating will be split into two tables."
+    displayed_message = true
+  end
 end
 
-index_two = 0
-
-# displays the poker players and a table number for them to sit at
-if poker_players.length() > 10 && poker_players_names.length() > 10
-  poker_players_names_two = []
-  poker_players_two = []
-
-  puts "--------"
+# Split players into tables if more than 10
+if poker_players.length > 10 && poker_players_names.length > 10
+  # Shuffle and split names into two tables
   shuffled_names = poker_players_names.shuffle
-  length = shuffled_names.length() / 2
-  while index_two < length
-    poker_players_names_two << shuffled_names.pop()
-    index_two += 1
-  end
-  
-  # p shuffled_names
-  # p shuffled_names.pop()
-  # p shuffled_names
-  index_two = 1
-  while index_two <= poker_players.length() / 2
-    poker_players_two << index_two
-    index_two += 1
-  end
-  poker_players = poker_players.slice(0, poker_players.length() / 2)
+  table_one_names = shuffled_names.slice(0, shuffled_names.length / 2)
+  table_two_names = shuffled_names.slice(shuffled_names.length / 2, shuffled_names.length)
 
+  # Generate seat numbers for each table
+  table_one_players = ("Button".."Seat #{table_one_names.length}").to_a
+  table_two_players = ("Button".."Seat #{table_two_names.length}").to_a
+
+  # Display tables
   puts "--------"
-  puts "Table One: Players below:"
+  puts "Table One: Players below (starting from the button seat):"
   puts "--------"
-  p shuffled_names
-  puts "Table One: Seat number:"
-  p poker_players
-  
+  table_one_names.each_with_index do |name, index|
+    puts "#{table_one_players[index]}: #{name}"
+  end
   puts "--------"
-  puts "Table Two: Players below:"
+  puts "Table Two: Players below (starting from the button seat):"
   puts "--------"
-  p poker_players_names_two
-  puts "Table Two: Seat number:"
-  p poker_players_two
-  
+  table_two_names.each_with_index do |name, index|
+    puts "#{table_two_players[index]}: #{name}"
+  end
+else
+  # Shuffle all players if there are 10 or fewer
+  shuffled_names = poker_players_names.shuffle
+  shuffled_players = ("Button".."Seat #{shuffled_names.length}").to_a
+
+  # Display players at a single table
   puts "--------"
-  puts "Shuffle em and deal!"
-else 
+  puts "Players below (starting from the button seat):"
   puts "--------"
-  puts "See the players below:"
-  p poker_players_names.shuffle
-  puts "--------"
-  puts "Their seat number:"
-  p poker_players
-  puts "--------"
-  puts "Shuffle em and deal!"
+  shuffled_names.each_with_index do |name, index|
+    puts "#{shuffled_players[index]}: #{name}"
+  end
 end
+
+puts "--------"
+puts "Shuffle up and deal!"
