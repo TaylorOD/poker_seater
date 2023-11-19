@@ -174,41 +174,25 @@
         }
       });
 
-      function showMessage(message, isError = false) {
-        messageDiv.textContent = message;
-        if (isError) {
-          messageDiv.classList.add('error-message');
-        } else {
-          messageDiv.classList.remove('error-message');
-        }
-      }
-
       function addPlayer() {
         const input = playerNameInput.value.trim();
+        let playerNames = [];
 
-        if (input.toLowerCase() === "test, test") {
-          predefinedNames.forEach(name => {
-            pokerPlayers.push(name);
-            updatePlayersList(name);
-          });
+        if (input.toLowerCase() === "test, test" && pokerPlayers.length === 0) {
+          playerNames = predefinedNames;
         } else {
-          const playerNames = input.split(',')
-            .map(name => name.trim())
-            .filter(name => name);
-
-          if (playerNames.length === 0) {
-            showMessage("Please enter a valid player name.", true);
-            return;
-          } else {
-            showMessage(""); // Clear the message when a valid name is entered
-          }
-
-
-          playerNames.forEach(playerName => {
-            pokerPlayers.push(playerName);
-            updatePlayersList(playerName);
-          });
+          playerNames = input.split(',').map(name => name.trim()).filter(name => name);
         }
+
+        if (pokerPlayers.length + playerNames.length > 20) {
+          showMessage("Error: Cannot add more than 20 players.", true);
+          return;
+        }
+
+        playerNames.forEach(playerName => {
+          pokerPlayers.push(playerName);
+          updatePlayersList(playerName);
+        });
 
         playerNameInput.value = "";
         updatePlayersCount();
@@ -217,13 +201,22 @@
       function updatePlayersList(playerName) {
         const listItem = document.createElement("li");
         listItem.textContent = playerName;
-        playersUl.appendChild(listItem);
+        document.getElementById("players-ul").appendChild(listItem);
         playersListDiv.style.display = 'block'; // Show the players list
       }
 
       function updatePlayersCount() {
-        const playersCountSpan = document.getElementById("players-count");
-        playersCountSpan.textContent = pokerPlayers.length;
+        document.getElementById("players-count").textContent = pokerPlayers.length;
+      }
+
+      function showMessage(message, isError = false) {
+        const messageDiv = document.getElementById("message");
+        messageDiv.textContent = message;
+        if (isError) {
+          messageDiv.classList.add('error-message');
+        } else {
+          messageDiv.classList.remove('error-message');
+        }
       }
 
       function displaySeating() {

@@ -18,7 +18,8 @@ I built this in Ruby. This is purely to make my poker buddies believe I am actua
 List of names for testing:
 Alice, Bob, Charlie, David, Emily, Frank, Grace, Helen, Ivan, Jack, Kelly, Liam, Maria, Nathan, Olivia, Peter, Quinn, Rachel, Samuel, Teresa
 
+You can also enter "test, test" and the list of names above will populate
+
 ## TODO
 
-- Prevent more than 20 players from being added OR add support for over 20 players
-- Make it look a bit nicer
+- Make it look a bit nicer or more pokery
