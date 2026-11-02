@@ -202,6 +202,20 @@
       border-color: var(--brass-hover);
     }
 
+    button.reset-button {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    button.reset-button:hover {
+      background-color: var(--red);
+      color: var(--room);
+    }
+
+    .players-header .reset-button {
+      padding: 6px 16px;
+    }
+
     button.link {
       border: none;
       color: var(--muted);
@@ -578,7 +592,7 @@
       <div id="players-list" hidden>
         <div class="players-header">
           <h2>Players (<span id="players-count">0</span> of 20)</h2>
-          <button type="button" class="link" id="clear-button">Clear all</button>
+          <button type="button" class="reset-button" id="clear-button">Reset</button>
         </div>
         <ul id="players-ul"></ul>
       </div>
@@ -609,6 +623,7 @@
         <button type="button" id="share-button">Share link</button>
         <button type="button" id="edit-button">Change players</button>
         <button type="button" id="own-game-button" hidden>Start your own game</button>
+        <button type="button" class="reset-button" id="reset-game-button">Reset</button>
       </div>
       <div class="notice" id="notice" hidden>
         <div id="notice-text" role="status" tabindex="-1"></div>
@@ -651,6 +666,7 @@
       const reshuffleButton = document.getElementById("reshuffle-button");
       const editButton = document.getElementById("edit-button");
       const ownGameButton = document.getElementById("own-game-button");
+      const resetGameButton = document.getElementById("reset-game-button");
       const sharedNote = document.getElementById("shared-note");
       const notice = document.getElementById("notice");
       const noticeText = document.getElementById("notice-text");
@@ -689,11 +705,8 @@
           startGame(activePlayers().concat(game.out));
         }
       });
-      document.getElementById("clear-button").addEventListener("click", () => {
-        pokerPlayers = [];
-        savePlayers();
-        renderPlayers();
-      });
+      document.getElementById("clear-button").addEventListener("click", resetEverything);
+      resetGameButton.addEventListener("click", resetEverything);
       editButton.addEventListener("click", () => {
         if (confirmLosingGame()) {
           leaveGame();
@@ -943,6 +956,18 @@
         return !game || game.out.length === 0 || window.confirm("This will lose who is out and any table moves. Keep going?");
       }
 
+      function resetEverything() {
+        if (!window.confirm("This clears all players and the current game. Keep going?")) {
+          return;
+        }
+        leaveGame();
+        pokerPlayers = [];
+        savePlayers();
+        showMessage("");
+        renderPlayers();
+        setPlayerCount(defaultPlayerCount);
+      }
+
       function leaveGame() {
         cancelShuffle();
         if (!isSharedView) {
@@ -1101,6 +1126,7 @@
         reshuffleButton.hidden = isSharedView;
         editButton.hidden = isSharedView;
         ownGameButton.hidden = !isSharedView;
+        resetGameButton.hidden = isSharedView;
         sharedNote.hidden = !isSharedView;
         formSection.hidden = true;
         resultsSection.hidden = false;
