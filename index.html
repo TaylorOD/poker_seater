@@ -116,6 +116,11 @@
       padding: 12px 4px;
     }
 
+    .mode-toggle #demo-button {
+      flex: none;
+      padding: 12px 14px;
+    }
+
     .mode-toggle button[aria-pressed="true"] {
       background-color: var(--room);
       border-color: var(--brass);
@@ -556,6 +561,7 @@
     <div id="setup">
     <section class="panel" id="poker-form">
       <div class="mode-toggle" role="group" aria-label="How to add players">
+        <button type="button" id="demo-button">Demo</button>
         <button type="button" id="mode-names" aria-pressed="true">Enter names</button>
         <button type="button" id="mode-number" aria-pressed="false">Number of players</button>
       </div>
@@ -626,6 +632,7 @@
       const hashPrefix = "#seats=";
       const minPlayerCount = 2;
       const defaultPlayerCount = 8;
+      const demoPlayerCount = 13;
       const maxPlayers = 20;
       const maxPlayersPerTable = 10;
       const maxNameLength = 40;
@@ -673,10 +680,13 @@
           addPlayers();
         }
       });
-      document.getElementById("deal-button").addEventListener("click", startGame);
+      document.getElementById("deal-button").addEventListener("click", () => startGame(getDealPlayers()));
+      document.getElementById("demo-button").addEventListener("click", () => {
+        startGame(predefinedNames.slice(0, demoPlayerCount), ["This is a demo game. Tap Out next to a player to see the tables balance."]);
+      });
       reshuffleButton.addEventListener("click", () => {
         if (confirmLosingGame()) {
-          startGame();
+          startGame(activePlayers().concat(game.out));
         }
       });
       document.getElementById("clear-button").addEventListener("click", () => {
@@ -913,8 +923,7 @@
         return shuffled;
       }
 
-      function startGame() {
-        const players = getDealPlayers();
+      function startGame(players, notes = []) {
         if (players.length === 0) {
           showMessage("Please enter at least one player name.");
           return;
@@ -926,7 +935,7 @@
         game = { tables, out: [], history: [] };
         isSharedView = false;
         saveGame();
-        renderGame({ animate: true });
+        renderGame({ animate: true, notes });
         window.scrollTo(0, 0);
       }
 
