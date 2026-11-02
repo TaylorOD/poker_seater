@@ -111,8 +111,9 @@
     }
 
     .mode-toggle button {
-      flex: 1;
-      white-space: nowrap;
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 12px 4px;
     }
 
     .mode-toggle button[aria-pressed="true"] {
@@ -556,7 +557,7 @@
     <section class="panel" id="poker-form">
       <div class="mode-toggle" role="group" aria-label="How to add players">
         <button type="button" id="mode-names" aria-pressed="true">Enter names</button>
-        <button type="button" id="mode-number" aria-pressed="false">Just a number</button>
+        <button type="button" id="mode-number" aria-pressed="false">Number of players</button>
       </div>
       <div id="names-mode">
       <form id="add-form">
