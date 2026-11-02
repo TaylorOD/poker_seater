@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" type="image/png" href="/poker_seater/favicon.png" />
+
+  <title>Poker Seat Randomizer</title>
+  <style>
+    :root {
+      --room: #12100d;
+      --panel: #1f1b16;
+      --panel-line: #3a3228;
+      --cream: #f5efe0;
+      --muted: #b5aa95;
+      --brass: #d8b25c;
+      --brass-hover: #e8c777;
+      --red: #e0584a;
+      --felt: #0f6b42;
+      --felt-dark: #09482c;
+      --rail: #3b2415;
+      --serif: Georgia, "Times New Roman", serif;
+      --sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--room);
+      color: var(--cream);
+      font-family: var(--sans);
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 24px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-size: 2.5rem;
+      font-weight: normal;
+      margin: 0;
+    }
+
+    .suits {
+      font-size: 1.25rem;
+      letter-spacing: 0.5em;
+      margin: 0 -0.5em 8px 0;
+    }
+
+    .suits .red {
+      color: var(--red);
+    }
+
+    .tagline {
+      color: var(--muted);
+      margin: 8px 0 0;
+    }
+
+    main {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .panel {
+      background-color: var(--panel);
+      border: 1px solid var(--panel-line);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .add-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    textarea,
+    input {
+      flex: 1;
+      min-width: 0;
+      background-color: var(--room);
+      border: 1px solid var(--panel-line);
+      border-radius: 8px;
+      color: var(--cream);
+      font: inherit;
+      padding: 12px;
+      resize: vertical;
+    }
+
+    .mode-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .mode-toggle button {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 12px 4px;
+    }
+
+    .mode-toggle #demo-button {
+      flex: none;
+      padding: 12px 14px;
+    }
+
+    .mode-toggle button[aria-pressed="true"] {
+      background-color: var(--room);
+      border-color: var(--brass);
+      color: var(--brass);
+    }
+
+    .stepper {
+      display: flex;
+      gap: 8px;
+    }
+
+    .stepper button {
+      flex: none;
+      font-size: 1.25rem;
+      line-height: 1;
+      width: 52px;
+    }
+
+    .stepper input {
+      font-size: 1.25rem;
+      font-weight: 600;
+      text-align: center;
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    .stepper input::-webkit-outer-spin-button,
+    .stepper input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    #table-preview {
+      margin-top: 24px;
+    }
+
+    #table-preview .table-block {
+      margin-bottom: 16px;
+    }
+
+    #preview-note {
+      margin: 0;
+      text-align: center;
+    }
+
+    textarea::placeholder {
+      color: var(--muted);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.875rem;
+      margin: 8px 0 0;
+    }
+
+    button {
+      border: 1px solid var(--panel-line);
+      border-radius: 8px;
+      background-color: transparent;
+      color: var(--cream);
+      cursor: pointer;
+      font: inherit;
+      font-weight: 600;
+      padding: 12px 16px;
+    }
+
+    button:hover {
+      border-color: var(--brass);
+    }
+
+    button.primary {
+      background-color: var(--brass);
+      border-color: var(--brass);
+      color: var(--room);
+    }
+
+    button.primary:hover {
+      background-color: var(--brass-hover);
+      border-color: var(--brass-hover);
+    }
+
+    button.reset-button {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    button.reset-button:hover {
+      background-color: var(--red);
+      color: var(--room);
+    }
+
+    .players-header .reset-button {
+      padding: 6px 16px;
+    }
+
+    button.link {
+      border: none;
+      color: var(--muted);
+      font-weight: normal;
+      padding: 4px;
+      text-decoration: underline;
+    }
+
+    button.link:hover {
+      color: var(--cream);
+    }
+
+    textarea:focus-visible,
+    input:focus-visible,
+    button:focus-visible,
+    a:focus-visible {
+      outline: 2px solid var(--brass);
+      outline-offset: 2px;
+    }
+
+    #message {
+      color: var(--red);
+      font-weight: 600;
+      margin: 12px 0 0;
+    }
+
+    #message.info {
+      color: var(--brass);
+    }
+
+    #message:empty {
+      display: none;
+    }
+
+    .players-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+
+    .players-header h2 {
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    #players-ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      list-style: none;
+      margin: 12px 0 0;
+      padding: 0;
+    }
+
+    #players-ul li {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background-color: var(--room);
+      border: 1px solid var(--panel-line);
+      border-radius: 999px;
+      max-width: 100%;
+      padding: 2px 4px 2px 12px;
+    }
+
+    #players-ul span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #players-ul button {
+      border: none;
+      color: var(--muted);
+      line-height: 1;
+      padding: 8px;
+    }
+
+    #players-ul button:hover {
+      color: var(--red);
+    }
+
+    #deal-button {
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .actions button {
+      flex: 1 1 40%;
+      white-space: nowrap;
+    }
+
+    #shared-note {
+      color: var(--muted);
+      margin: 0 0 16px;
+      text-align: center;
+    }
+
+    .notice {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      background-color: var(--panel);
+      border: 1px solid var(--panel-line);
+      border-left: 4px solid var(--brass);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      padding: 12px 16px;
+    }
+
+    #notice-text {
+      margin: 0;
+    }
+
+    #notice-text p {
+      margin: 0;
+    }
+
+    #notice-text p + p {
+      margin-top: 4px;
+    }
+
+    #notice-text:focus {
+      outline: none;
+    }
+
+    #undo-button {
+      flex: none;
+    }
+
+    .table-block {
+      margin-bottom: 32px;
+    }
+
+    .poker-table {
+      --rx: 36%;
+      --ry: 44%;
+      aspect-ratio: 4 / 5;
+      position: relative;
+      width: 100%;
+    }
+
+    .felt {
+      position: absolute;
+      inset: 7% 11%;
+      background: radial-gradient(ellipse at center, var(--felt), var(--felt-dark));
+      border: 10px solid var(--rail);
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px var(--brass), 0 12px 32px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .felt-title {
+      font-family: var(--serif);
+      font-size: 1.5rem;
+    }
+
+    .felt-count {
+      color: rgba(245, 239, 224, 0.75);
+      font-size: 0.875rem;
+      margin-top: 4px;
+    }
+
+    .seat {
+      position: absolute;
+      left: calc(50% + var(--cos) * var(--rx));
+      top: calc(50% + var(--sin) * var(--ry));
+      transform: translate(-50%, -50%);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background-color: var(--cream);
+      border-radius: 999px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+      color: var(--room);
+      font-size: 0.875rem;
+      font-weight: 600;
+      max-width: 108px;
+      padding: 4px 10px 4px 4px;
+    }
+
+    .seat-number {
+      flex: none;
+      width: 22px;
+      height: 22px;
+      line-height: 22px;
+      background-color: var(--felt-dark);
+      border-radius: 50%;
+      color: var(--cream);
+      font-size: 0.75rem;
+      text-align: center;
+    }
+
+    .seat.dealer .seat-number {
+      background-color: var(--brass);
+      color: var(--room);
+    }
+
+    .seat.empty {
+      background-color: var(--room);
+      border: 1px dashed var(--muted);
+      box-shadow: none;
+      color: var(--muted);
+      font-weight: normal;
+    }
+
+    .seat.empty .seat-number {
+      background-color: transparent;
+      color: var(--muted);
+    }
+
+    .seat.moved {
+      box-shadow: 0 0 0 3px var(--brass), 0 2px 6px rgba(0, 0, 0, 0.5);
+    }
+
+    .seat.spinning {
+      background-color: var(--panel);
+      color: var(--brass);
+    }
+
+    .seat.locked {
+      animation: lock 0.3s ease-out;
+    }
+
+    .seat-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    @keyframes lock {
+      from {
+        transform: translate(-50%, -50%) scale(1.35);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .seat.locked {
+        animation: none;
+      }
+    }
+
+    .table-heading {
+      font-family: var(--serif);
+      font-weight: normal;
+      margin: 16px 0 0;
+    }
+
+    .seat-list {
+      color: var(--muted);
+      margin: 12px 0 0;
+      padding-left: 28px;
+    }
+
+    .shuffling .seat-list {
+      visibility: hidden;
+    }
+
+    .seat-list li {
+      border-bottom: 1px solid var(--panel-line);
+      overflow-wrap: anywhere;
+      padding: 6px 0;
+    }
+
+    .seat-list li::after {
+      clear: both;
+      content: "";
+      display: block;
+    }
+
+    .seat-list .player {
+      color: var(--cream);
+      line-height: 2;
+    }
+
+    .out-button {
+      float: right;
+      font-size: 0.875rem;
+      margin-left: 8px;
+      padding: 4px 12px;
+    }
+
+    #out-list {
+      color: var(--muted);
+      margin: 0 0 24px;
+      overflow-wrap: anywhere;
+    }
+
+    @media (min-width: 640px) {
+      .poker-table {
+        --rx: 42%;
+        --ry: 40%;
+        aspect-ratio: 16 / 9;
+      }
+
+      .felt {
+        inset: 10% 8%;
+      }
+
+      .seat {
+        max-width: 140px;
+      }
+
+      .seat-list {
+        columns: 2;
+        column-gap: 40px;
+      }
+
+      .seat-list li {
+        break-inside: avoid;
+      }
+
+      .actions button {
+        flex: 1;
+      }
+    }
+
+    footer {
+      color: var(--muted);
+      font-size: small;
+      margin-top: auto;
+      padding-top: 24px;
+      text-align: center;
+    }
+
+    footer a {
+      color: inherit;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="suits" aria-hidden="true">&#9827;<span class="red">&#9829;</span><span class="red">&#9830;</span>&#9824;</div>
+    <h1 id="headline">Poker Seater</h1>
+    <p class="tagline">Random seats, so nobody can say you gave yourself the best one.</p>
+  </header>
+
+  <main>
+    <div id="setup">
+    <section class="panel" id="poker-form">
+      <div class="mode-toggle" role="group" aria-label="How to add players">
+        <button type="button" id="demo-button">Demo</button>
+        <button type="button" id="mode-names" aria-pressed="true">Enter names</button>
+        <button type="button" id="mode-number" aria-pressed="false">Number of players</button>
+      </div>
+      <div id="names-mode">
+      <form id="add-form">
+        <label for="player-names">Add players</label>
+        <div class="add-row">
+          <textarea id="player-names" rows="2" autocomplete="off" placeholder="Rob, Sam, Kelly..."></textarea>
+          <button type="submit" id="add-player">Add</button>
+        </div>
+        <p class="hint">Type names or paste a list from anywhere. Commas, new lines, bullets and numbers all work.</p>
+      </form>
+      <p id="message" role="alert"></p>
+      <div id="players-list" hidden>
+        <div class="players-header">
+          <h2>Players (<span id="players-count">0</span> of 20)</h2>
+          <button type="button" class="reset-button" id="clear-button">Reset</button>
+        </div>
+        <ul id="players-ul"></ul>
+      </div>
+      </div>
+      <div id="number-mode" hidden>
+        <label for="player-count">How many players?</label>
+        <div class="stepper">
+          <button type="button" id="count-down" aria-label="One less player">&minus;</button>
+          <input id="player-count" type="number" inputmode="numeric" min="2" max="20" value="8">
+          <button type="button" id="count-up" aria-label="One more player">+</button>
+        </div>
+        <p class="hint">Everyone picks a number before you deal, then seats go to Player 1, Player 2 and so on.</p>
+      </div>
+      <button type="button" class="primary" id="deal-button">Shuffle up and deal</button>
+    </section>
+
+    <section id="table-preview" aria-hidden="true">
+      <div id="preview-tables"></div>
+      <p class="hint" id="preview-note">Seats get drawn when you deal.</p>
+    </section>
+    </div>
+
+    <section id="results" hidden>
+      <p id="shared-note" hidden>Someone shared these seats with you. This is how the tables looked when they copied the link.</p>
+      <div class="actions">
+        <button type="button" class="primary" id="reshuffle-button">Reshuffle</button>
+        <button type="button" id="copy-button">Copy seats</button>
+        <button type="button" id="share-button">Share link</button>
+        <button type="button" id="edit-button">Change players</button>
+        <button type="button" id="own-game-button" hidden>Start your own game</button>
+        <button type="button" class="reset-button" id="reset-game-button">Reset</button>
+      </div>
+      <div class="notice" id="notice" hidden>
+        <div id="notice-text" role="status" tabindex="-1"></div>
+        <button type="button" class="link" id="undo-button">Undo</button>
+      </div>
+      <div id="poker-table"></div>
+      <p id="out-list" hidden></p>
+    </section>
+  </main>
+
+  <footer>
+    <p>This is a <a href="https://www.taylordorsett.com/">Taylor Dorsett</a> Production.</p>
+  </footer>
+
+  <script>
+
+  document.addEventListener("DOMContentLoaded", () => {
+      const playersKey = "poker-seater-players";
+      const gameKey = "poker-seater-game";
+      const setupKey = "poker-seater-setup";
+      const hashPrefix = "#seats=";
+      const minPlayerCount = 2;
+      const defaultPlayerCount = 8;
+      const demoPlayerCount = 13;
+      const maxPlayers = 20;
+      const maxPlayersPerTable = 10;
+      const maxNameLength = 40;
+      const tableNames = ["Table One", "Table Two"];
+      const addForm = document.getElementById("add-form");
+      const playerNameInput = document.getElementById("player-names");
+      const messageEl = document.getElementById("message");
+      const playersListDiv = document.getElementById("players-list");
+      const playersUl = document.getElementById("players-ul");
+      const playersCount = document.getElementById("players-count");
+      const formSection = document.getElementById("setup");
+      const resultsSection = document.getElementById("results");
+      const pokerTable = document.getElementById("poker-table");
+      const copyButton = document.getElementById("copy-button");
+      const shareButton = document.getElementById("share-button");
+      const reshuffleButton = document.getElementById("reshuffle-button");
+      const editButton = document.getElementById("edit-button");
+      const ownGameButton = document.getElementById("own-game-button");
+      const resetGameButton = document.getElementById("reset-game-button");
+      const sharedNote = document.getElementById("shared-note");
+      const notice = document.getElementById("notice");
+      const noticeText = document.getElementById("notice-text");
+      const undoButton = document.getElementById("undo-button");
+      const outList = document.getElementById("out-list");
+      const modeNamesButton = document.getElementById("mode-names");
+      const modeNumberButton = document.getElementById("mode-number");
+      const namesMode = document.getElementById("names-mode");
+      const numberMode = document.getElementById("number-mode");
+      const playerCountInput = document.getElementById("player-count");
+      const previewTables = document.getElementById("preview-tables");
+      const predefinedNames = ["Alice", "Bob", "Charlie", "David", "Emily", "Frank", "Grace", "Helen", "Ivan", "Jack", "Kelly", "Liam", "Maria", "Nathan", "Olivia", "Peter", "Quinn", "Rachel", "Samuel", "Teresa"];
+      let pokerPlayers = loadPlayers();
+      let useNumber = false;
+      let game = null;
+      let isSharedView = false;
+      let shuffleInterval = null;
+      let shuffleTimeouts = [];
+
+      addForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        addPlayers();
+      });
+      playerNameInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+          event.preventDefault();
+          addPlayers();
+        }
+      });
+      document.getElementById("deal-button").addEventListener("click", () => startGame(getDealPlayers()));
+      document.getElementById("demo-button").addEventListener("click", () => {
+        startGame(predefinedNames.slice(0, demoPlayerCount), ["This is a demo game. Tap Out next to a player to see the tables balance."]);
+      });
+      reshuffleButton.addEventListener("click", () => {
+        if (confirmLosingGame()) {
+          startGame(activePlayers().concat(game.out));
+        }
+      });
+      document.getElementById("clear-button").addEventListener("click", resetEverything);
+      resetGameButton.addEventListener("click", resetEverything);
+      editButton.addEventListener("click", () => {
+        if (confirmLosingGame()) {
+          leaveGame();
+        }
+      });
+      ownGameButton.addEventListener("click", leaveGame);
+      copyButton.addEventListener("click", () => copyText(createSeatingText(), copyButton));
+      shareButton.addEventListener("click", () => copyText(window.location.href, shareButton));
+      undoButton.addEventListener("click", undoLastBust);
+      window.addEventListener("hashchange", openFromUrl);
+      modeNamesButton.addEventListener("click", () => setUseNumber(false));
+      modeNumberButton.addEventListener("click", () => setUseNumber(true));
+      document.getElementById("count-down").addEventListener("click", () => setPlayerCount(getPlayerCount() - 1));
+      document.getElementById("count-up").addEventListener("click", () => setPlayerCount(getPlayerCount() + 1));
+      playerCountInput.addEventListener("input", renderPreview);
+      playerCountInput.addEventListener("change", () => setPlayerCount(getPlayerCount()));
+
+      loadSetup();
+      renderPlayers();
+      openFromUrl();
+
+      function readStorage(key) {
+        try {
+          return JSON.parse(localStorage.getItem(key));
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function writeStorage(key, value) {
+        try {
+          localStorage.setItem(key, JSON.stringify(value));
+        } catch (error) {
+          // It just wont be remembered next time
+        }
+      }
+
+      function removeStorage(key) {
+        try {
+          localStorage.removeItem(key);
+        } catch (error) {
+          // Nothing was saved then
+        }
+      }
+
+      function loadPlayers() {
+        const saved = readStorage(playersKey);
+        return Array.isArray(saved) ? saved.filter(name => typeof name === "string").slice(0, maxPlayers) : [];
+      }
+
+      function savePlayers() {
+        writeStorage(playersKey, pokerPlayers);
+      }
+
+      function loadSetup() {
+        const saved = readStorage(setupKey);
+        if (saved && Number.isInteger(saved.count)) {
+          playerCountInput.value = clampPlayerCount(saved.count);
+        }
+        useNumber = Boolean(saved && saved.useNumber);
+        renderMode();
+      }
+
+      function saveSetup() {
+        writeStorage(setupKey, { useNumber, count: getPlayerCount() });
+      }
+
+      function setUseNumber(value) {
+        useNumber = value;
+        showMessage("");
+        saveSetup();
+        renderMode();
+        renderPreview();
+      }
+
+      function renderMode() {
+        modeNamesButton.setAttribute("aria-pressed", String(!useNumber));
+        modeNumberButton.setAttribute("aria-pressed", String(useNumber));
+        namesMode.hidden = useNumber;
+        numberMode.hidden = !useNumber;
+      }
+
+      function clampPlayerCount(count) {
+        return Math.min(maxPlayers, Math.max(minPlayerCount, count));
+      }
+
+      function getPlayerCount() {
+        const count = parseInt(playerCountInput.value, 10);
+        return Number.isNaN(count) ? defaultPlayerCount : clampPlayerCount(count);
+      }
+
+      function setPlayerCount(count) {
+        playerCountInput.value = clampPlayerCount(count);
+        saveSetup();
+        renderPreview();
+      }
+
+      function getDealPlayers() {
+        if (useNumber) {
+          return Array.from({ length: getPlayerCount() }, (_, index) => `Player ${index + 1}`);
+        }
+        return pokerPlayers;
+      }
+
+      function splitIntoTables(players) {
+        if (players.length <= maxPlayersPerTable) {
+          return [players];
+        }
+        const midPoint = Math.ceil(players.length / 2);
+        return [players.slice(0, midPoint), players.slice(midPoint)];
+      }
+
+      function playerCountText(count) {
+        return count === 1 ? "1 player" : `${count} players`;
+      }
+
+      function renderPreview() {
+        const players = getDealPlayers();
+        previewTables.innerHTML = "";
+        if (players.length === 0) {
+          previewTables.appendChild(createPreviewTable(tableNames[0], maxPlayersPerTable, "Add players to fill it"));
+          return;
+        }
+        splitIntoTables(players).forEach((tablePlayers, index) => {
+          previewTables.appendChild(createPreviewTable(tableNames[index], tablePlayers.length, playerCountText(tablePlayers.length)));
+        });
+      }
+
+      function createPreviewTable(tableName, seatCount, countText) {
+        const block = document.createElement("div");
+        block.className = "table-block";
+        const table = createTableShell(tableName, countText);
+        for (let index = 0; index < seatCount; index++) {
+          const seat = document.createElement("div");
+          seat.className = "seat empty";
+          placeSeat(seat, index, seatCount);
+          const number = document.createElement("span");
+          number.className = "seat-number";
+          number.textContent = index + 1;
+          const name = document.createElement("span");
+          name.className = "seat-name";
+          name.textContent = "Open";
+          seat.append(number, name);
+          table.appendChild(seat);
+        }
+        block.appendChild(table);
+        return block;
+      }
+
+      function parsePlayerNames(input) {
+        return input
+          .split(/[,;\t\r\n]+/)
+          .map(name => name.replace(/^\s*(?:[-*•·]+|\d+[.)])\s*/, "").trim().slice(0, maxNameLength))
+          .filter(name => name);
+      }
+
+      function addPlayers() {
+        const input = playerNameInput.value.trim();
+        let playerNames = [];
+
+        if (input.toLowerCase() === "test, test" && pokerPlayers.length === 0) {
+          playerNames = predefinedNames;
+        } else {
+          playerNames = parsePlayerNames(input);
+        }
+
+        const seen = new Set(pokerPlayers.map(name => name.toLowerCase()));
+        const newNames = [];
+        const duplicates = [];
+        playerNames.forEach(name => {
+          if (seen.has(name.toLowerCase())) {
+            duplicates.push(name);
+          } else {
+            seen.add(name.toLowerCase());
+            newNames.push(name);
+          }
+        });
+
+        if (pokerPlayers.length + newNames.length > maxPlayers) {
+          showMessage(`Cannot add more than ${maxPlayers} players.`);
+          return;
+        }
+
+        pokerPlayers = pokerPlayers.concat(newNames);
+        playerNameInput.value = "";
+        showMessage(duplicates.length ? `Already added: ${duplicates.join(", ")}.` : "", false);
+        savePlayers();
+        renderPlayers();
+      }
+
+      function removePlayer(index) {
+        pokerPlayers.splice(index, 1);
+        savePlayers();
+        renderPlayers();
+      }
+
+      function renderPlayers() {
+        playersUl.innerHTML = "";
+        pokerPlayers.forEach((playerName, index) => {
+          const listItem = document.createElement("li");
+          const nameSpan = document.createElement("span");
+          nameSpan.textContent = playerName;
+          const removeButton = document.createElement("button");
+          removeButton.type = "button";
+          removeButton.textContent = "×";
+          removeButton.setAttribute("aria-label", `Remove ${playerName}`);
+          removeButton.addEventListener("click", () => removePlayer(index));
+          listItem.append(nameSpan, removeButton);
+          playersUl.appendChild(listItem);
+        });
+        playersCount.textContent = pokerPlayers.length;
+        playersListDiv.hidden = pokerPlayers.length === 0;
+        renderPreview();
+      }
+
+      function showMessage(message, isError = true) {
+        messageEl.textContent = message;
+        messageEl.classList.toggle("info", !isError);
+      }
+
+      function shuffleArray(array) {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+      }
+
+      function startGame(players, notes = []) {
+        if (players.length === 0) {
+          showMessage("Please enter at least one player name.");
+          return;
+        }
+        showMessage("");
+
+        const tables = splitIntoTables(shuffleArray(players));
+
+        game = { tables, out: [], history: [] };
+        isSharedView = false;
+        saveGame();
+        renderGame({ animate: true, notes });
+        window.scrollTo(0, 0);
+      }
+
+      function confirmLosingGame() {
+        return !game || game.out.length === 0 || window.confirm("This will lose who is out and any table moves. Keep going?");
+      }
+
+      function resetEverything() {
+        if (!window.confirm("This clears all players and the current game. Keep going?")) {
+          return;
+        }
+        leaveGame();
+        pokerPlayers = [];
+        savePlayers();
+        showMessage("");
+        renderPlayers();
+        setPlayerCount(defaultPlayerCount);
+      }
+
+      function leaveGame() {
+        cancelShuffle();
+        if (!isSharedView) {
+          removeStorage(gameKey);
+        }
+        game = null;
+        isSharedView = false;
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+        showForm();
+      }
+
+      function showForm() {
+        resultsSection.hidden = true;
+        formSection.hidden = false;
+        playerNameInput.focus();
+      }
+
+      function saveGame() {
+        writeStorage(gameKey, game);
+        window.history.replaceState(null, "", hashPrefix + encodeTables(game.tables));
+      }
+
+      function encodeTables(tables) {
+        const bytes = new TextEncoder().encode(JSON.stringify(tables));
+        return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      }
+
+      function decodeTables(encoded) {
+        try {
+          const binary = atob(encoded.replace(/-/g, "+").replace(/_/g, "/"));
+          const bytes = Uint8Array.from(binary, character => character.charCodeAt(0));
+          const tables = JSON.parse(new TextDecoder().decode(bytes));
+          return areValidTables(tables) ? tables : null;
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function areValidTables(tables) {
+        if (!Array.isArray(tables) || tables.length < 1 || tables.length > tableNames.length) {
+          return false;
+        }
+        const allSeats = tables.flat();
+        const players = allSeats.filter(seat => seat !== null);
+        return tables.every(Array.isArray)
+          && allSeats.length <= maxPlayers + tableNames.length
+          && players.length >= 1
+          && players.length <= maxPlayers
+          && players.every(name => typeof name === "string" && name.length > 0 && name.length <= maxNameLength);
+      }
+
+      function openFromUrl() {
+        cancelShuffle();
+        const hash = window.location.hash;
+        const tables = hash.startsWith(hashPrefix) ? decodeTables(hash.slice(hashPrefix.length)) : null;
+
+        if (!tables) {
+          game = null;
+          isSharedView = false;
+          resultsSection.hidden = true;
+          formSection.hidden = false;
+          return;
+        }
+
+        // The person running the game gets their controls back when they reload their own link
+        const saved = readStorage(gameKey);
+        if (saved && Array.isArray(saved.tables) && JSON.stringify(saved.tables) === JSON.stringify(tables)) {
+          game = { tables: saved.tables, out: saved.out || [], history: saved.history || [] };
+          isSharedView = false;
+        } else {
+          game = { tables, out: [], history: [] };
+          isSharedView = true;
+        }
+        renderGame();
+      }
+
+      function activePlayers(tables = game.tables) {
+        return tables.flat().filter(seat => seat !== null);
+      }
+
+      function markPlayerOut(tableIndex, seatIndex) {
+        const name = game.tables[tableIndex][seatIndex];
+        game.history.push(JSON.stringify({ tables: game.tables, out: game.out }));
+        game.tables[tableIndex][seatIndex] = null;
+        game.out.push(name);
+
+        const notes = [`${name} is out.`];
+        let move = null;
+        let animate = false;
+        const remaining = activePlayers();
+
+        if (remaining.length === 1) {
+          notes.push(`${remaining[0]} wins!`);
+        } else if (game.tables.length === 2 && remaining.length <= maxPlayersPerTable) {
+          game.tables = [shuffleArray(remaining)];
+          notes.push(`Down to ${remaining.length} players. Final table, everyone gets a new seat.`);
+          animate = true;
+        } else if (game.tables.length === 2) {
+          move = balanceTables();
+          if (move) {
+            notes.push(`Move ${move.player} from ${tableNames[move.fromTable]} seat ${move.fromSeat + 1} to ${tableNames[move.toTable]} seat ${move.toSeat + 1}.`);
+          }
+        }
+
+        saveGame();
+        renderGame({ animate, notes, move });
+        noticeText.focus({ preventScroll: true });
+      }
+
+      function balanceTables() {
+        const counts = game.tables.map(table => table.filter(seat => seat !== null).length);
+        if (Math.abs(counts[0] - counts[1]) < 2) {
+          return null;
+        }
+
+        const fromTable = counts[0] > counts[1] ? 0 : 1;
+        const toTable = 1 - fromTable;
+        const occupiedSeats = seatIndexes(game.tables[fromTable], seat => seat !== null);
+        const fromSeat = occupiedSeats[Math.floor(Math.random() * occupiedSeats.length)];
+        const emptySeats = seatIndexes(game.tables[toTable], seat => seat === null);
+        const toSeat = emptySeats.length
+          ? emptySeats[Math.floor(Math.random() * emptySeats.length)]
+          : game.tables[toTable].length;
+        const player = game.tables[fromTable][fromSeat];
+
+        game.tables[fromTable][fromSeat] = null;
+        game.tables[toTable][toSeat] = player;
+        return { player, fromTable, fromSeat, toTable, toSeat };
+      }
+
+      function seatIndexes(table, matches) {
+        return table.map((seat, index) => (matches(seat) ? index : -1)).filter(index => index !== -1);
+      }
+
+      function undoLastBust() {
+        const previous = JSON.parse(game.history.pop());
+        game.tables = previous.tables;
+        game.out = previous.out;
+        saveGame();
+        renderGame({ notes: ["Undone."] });
+      }
+
+      function renderGame({ animate = false, notes = [], move = null } = {}) {
+        cancelShuffle();
+        pokerTable.innerHTML = "";
+        game.tables.forEach((seats, tableIndex) => {
+          pokerTable.appendChild(createTable(tableIndex, seats, move));
+        });
+
+        renderNotice(notes);
+        outList.textContent = `Out: ${game.out.join(", ")}`;
+        outList.hidden = game.out.length === 0;
+
+        copyButton.textContent = "Copy seats";
+        shareButton.textContent = "Share link";
+        reshuffleButton.hidden = isSharedView;
+        editButton.hidden = isSharedView;
+        ownGameButton.hidden = !isSharedView;
+        resetGameButton.hidden = isSharedView;
+        sharedNote.hidden = !isSharedView;
+        formSection.hidden = true;
+        resultsSection.hidden = false;
+
+        if (animate) {
+          runShuffleAnimation();
+        }
+      }
+
+      function renderNotice(notes) {
+        noticeText.innerHTML = "";
+        const canUndo = !isSharedView && game.history.length > 0;
+        const lines = notes.length === 0 && canUndo ? ["Marked someone out by mistake? You can undo it."] : notes;
+        lines.forEach(note => {
+          const line = document.createElement("p");
+          line.textContent = note;
+          noticeText.appendChild(line);
+        });
+        undoButton.hidden = !canUndo;
+        notice.hidden = lines.length === 0;
+      }
+
+      function createTableShell(tableName, countText) {
+        const table = document.createElement("div");
+        table.className = "poker-table";
+        table.setAttribute("aria-hidden", "true");
+
+        const felt = document.createElement("div");
+        felt.className = "felt";
+        const title = document.createElement("div");
+        title.className = "felt-title";
+        title.textContent = tableName;
+        const count = document.createElement("div");
+        count.className = "felt-count";
+        count.textContent = countText;
+        felt.append(title, count);
+        table.appendChild(felt);
+        return table;
+      }
+
+      // Seat 1 sits at the bottom of the table and the rest go clockwise
+      function placeSeat(seat, index, seatCount) {
+        const angle = Math.PI / 2 + (index / seatCount) * Math.PI * 2;
+        seat.style.setProperty("--cos", Math.cos(angle).toFixed(4));
+        seat.style.setProperty("--sin", Math.sin(angle).toFixed(4));
+      }
+
+      function createTable(tableIndex, seats, move) {
+        const players = seats.filter(seat => seat !== null);
+        const dealerIndex = seats.findIndex(seat => seat !== null);
+        const canMarkOut = !isSharedView && activePlayers().length > 1;
+
+        const block = document.createElement("div");
+        block.className = "table-block";
+
+        const table = createTableShell(tableNames[tableIndex], playerCountText(players.length));
+
+        seats.forEach((player, index) => {
+          const seat = document.createElement("div");
+          seat.className = "seat";
+          placeSeat(seat, index, seats.length);
+
+          const number = document.createElement("span");
+          number.className = "seat-number";
+          number.textContent = index === dealerIndex ? "D" : index + 1;
+          const name = document.createElement("span");
+          name.className = "seat-name";
+
+          if (player === null) {
+            seat.classList.add("empty");
+            name.textContent = "Empty";
+          } else {
+            seat.title = player;
+            seat.dataset.player = player;
+            name.textContent = player;
+            seat.classList.toggle("dealer", index === dealerIndex);
+            seat.classList.toggle("moved", Boolean(move) && move.toTable === tableIndex && move.toSeat === index);
+          }
+
+          seat.append(number, name);
+          table.appendChild(seat);
+        });
+
+        const heading = document.createElement("h2");
+        heading.className = "table-heading";
+        heading.textContent = tableNames[tableIndex];
+
+        const list = document.createElement("ol");
+        list.className = "seat-list";
+        seats.forEach((player, index) => {
+          if (player === null) {
+            return;
+          }
+          const item = document.createElement("li");
+          item.value = index + 1;
+          if (canMarkOut) {
+            const outButton = document.createElement("button");
+            outButton.type = "button";
+            outButton.className = "out-button";
+            outButton.textContent = "Out";
+            outButton.setAttribute("aria-label", `Mark ${player} as out`);
+            outButton.addEventListener("click", () => markPlayerOut(tableIndex, index));
+            item.appendChild(outButton);
+          }
+          const name = document.createElement("span");
+          name.className = "player";
+          name.textContent = index === dealerIndex ? `${player} (dealer)` : player;
+          item.appendChild(name);
+          list.appendChild(item);
+        });
+
+        block.append(table, heading, list);
+        return block;
+      }
+
+      // The seats are already decided by this point. This only makes the reveal fun to watch
+      function runShuffleAnimation() {
+        const seats = [...pokerTable.querySelectorAll(".seat:not(.empty)")];
+        const names = activePlayers();
+        if (seats.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          return;
+        }
+
+        const stepMs = Math.min(150, 1800 / seats.length);
+        pokerTable.classList.add("shuffling");
+        seats.forEach(seat => seat.classList.add("spinning"));
+        shuffleInterval = setInterval(() => {
+          pokerTable.querySelectorAll(".seat.spinning .seat-name").forEach(name => {
+            name.textContent = names[Math.floor(Math.random() * names.length)];
+          });
+        }, 80);
+
+        shuffleArray(seats).forEach((seat, index) => {
+          shuffleTimeouts.push(setTimeout(() => lockSeat(seat), 600 + index * stepMs));
+        });
+        shuffleTimeouts.push(setTimeout(cancelShuffle, 600 + seats.length * stepMs));
+      }
+
+      function lockSeat(seat) {
+        seat.classList.remove("spinning");
+        seat.classList.add("locked");
+        seat.querySelector(".seat-name").textContent = seat.dataset.player;
+      }
+
+      function cancelShuffle() {
+        clearInterval(shuffleInterval);
+        shuffleTimeouts.forEach(clearTimeout);
+        shuffleInterval = null;
+        shuffleTimeouts = [];
+        pokerTable.querySelectorAll(".seat.spinning").forEach(lockSeat);
+        pokerTable.classList.remove("shuffling");
+      }
+
+      function createSeatingText() {
+        return game.tables.map((seats, tableIndex) => {
+          const dealerIndex = seats.findIndex(seat => seat !== null);
+          const lines = [`${tableNames[tableIndex]}:`];
+          seats.forEach((player, index) => {
+            if (player !== null) {
+              lines.push(`Seat ${index + 1}: ${player}${index === dealerIndex ? " (dealer)" : ""}`);
+            }
+          });
+          return lines.join("\n");
+        }).join("\n\n");
+      }
+
+      async function copyText(text, button) {
+        try {
+          await navigator.clipboard.writeText(text);
+          button.textContent = "Copied!";
+        } catch (error) {
+          button.textContent = copyWithTextarea(text) ? "Copied!" : "Could not copy";
+        }
+      }
+
+      // Backup for browsers that block the clipboard API
+      function copyWithTextarea(text) {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        const copied = document.execCommand("copy");
+        textarea.remove();
+        return copied;
+      }
+    });
+
+  </script>
+</body>
+
+</html>
