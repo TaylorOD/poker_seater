@@ -327,6 +327,53 @@ test.describe("share links", () => {
   });
 });
 
+test.describe("reset", () => {
+  test("clears the players on the first screen", async ({ page }) => {
+    await addPlayers(page, "Taylor, Rob");
+    await page.locator("#clear-button").click();
+    expect(await playerList(page)).toEqual([]);
+    await page.reload();
+    expect(await playerList(page)).toEqual([]);
+  });
+
+  test("clears the game and players after dealing", async ({ page }) => {
+    await deal(page, 13);
+    await markOut(page, 1);
+    await page.locator("#reset-game-button").click();
+    await expect(page.locator("#poker-form")).toBeVisible();
+    await expect(page.locator("#results")).toBeHidden();
+    expect(await playerList(page)).toEqual([]);
+    expect(page.url()).not.toContain("#seats=");
+    await expect(page.locator("#preview-tables .felt-count")).toHaveText("Add players to fill it");
+  });
+
+  test("sets the number of players back to 8", async ({ page }) => {
+    await page.locator("#mode-number").click();
+    await page.locator("#count-up").click();
+    await page.locator("#deal-button").click();
+    await waitForShuffle(page);
+    await page.locator("#reset-game-button").click();
+    await expect(page.locator("#player-count")).toHaveValue("8");
+  });
+
+  test("does nothing if you back out", async ({ page }) => {
+    await addPlayers(page, "Taylor, Rob");
+    page.removeAllListeners("dialog");
+    page.on("dialog", (dialog) => dialog.dismiss());
+    await page.locator("#clear-button").click();
+    expect(await playerList(page)).toEqual(["Taylor", "Rob"]);
+  });
+
+  test("is not on a shared view", async ({ page, browser }) => {
+    await deal(page, 4);
+    const friendContext = await browser.newContext();
+    const friend = await friendContext.newPage();
+    await friend.goto(page.url());
+    await expect(friend.locator("#reset-game-button")).toBeHidden();
+    await friendContext.close();
+  });
+});
+
 test.describe("layout", () => {
   async function expectNoSidewaysScroll(page) {
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
