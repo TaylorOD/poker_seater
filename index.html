@@ -91,7 +91,8 @@
       gap: 8px;
     }
 
-    textarea {
+    textarea,
+    input {
       flex: 1;
       min-width: 0;
       background-color: var(--room);
@@ -101,6 +102,68 @@
       font: inherit;
       padding: 12px;
       resize: vertical;
+    }
+
+    .mode-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .mode-toggle button {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 12px 4px;
+    }
+
+    .mode-toggle #demo-button {
+      flex: none;
+      padding: 12px 14px;
+    }
+
+    .mode-toggle button[aria-pressed="true"] {
+      background-color: var(--room);
+      border-color: var(--brass);
+      color: var(--brass);
+    }
+
+    .stepper {
+      display: flex;
+      gap: 8px;
+    }
+
+    .stepper button {
+      flex: none;
+      font-size: 1.25rem;
+      line-height: 1;
+      width: 52px;
+    }
+
+    .stepper input {
+      font-size: 1.25rem;
+      font-weight: 600;
+      text-align: center;
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    .stepper input::-webkit-outer-spin-button,
+    .stepper input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    #table-preview {
+      margin-top: 24px;
+    }
+
+    #table-preview .table-block {
+      margin-bottom: 16px;
+    }
+
+    #preview-note {
+      margin: 0;
+      text-align: center;
     }
 
     textarea::placeholder {
@@ -152,6 +215,7 @@
     }
 
     textarea:focus-visible,
+    input:focus-visible,
     button:focus-visible,
     a:focus-visible {
       outline: 2px solid var(--brass);
@@ -494,7 +558,14 @@
   </header>
 
   <main>
+    <div id="setup">
     <section class="panel" id="poker-form">
+      <div class="mode-toggle" role="group" aria-label="How to add players">
+        <button type="button" id="demo-button">Demo</button>
+        <button type="button" id="mode-names" aria-pressed="true">Enter names</button>
+        <button type="button" id="mode-number" aria-pressed="false">Number of players</button>
+      </div>
+      <div id="names-mode">
       <form id="add-form">
         <label for="player-names">Add players</label>
         <div class="add-row">
@@ -511,8 +582,24 @@
         </div>
         <ul id="players-ul"></ul>
       </div>
+      </div>
+      <div id="number-mode" hidden>
+        <label for="player-count">How many players?</label>
+        <div class="stepper">
+          <button type="button" id="count-down" aria-label="One less player">&minus;</button>
+          <input id="player-count" type="number" inputmode="numeric" min="2" max="20" value="8">
+          <button type="button" id="count-up" aria-label="One more player">+</button>
+        </div>
+        <p class="hint">Everyone picks a number before you deal, then seats go to Player 1, Player 2 and so on.</p>
+      </div>
       <button type="button" class="primary" id="deal-button">Shuffle up and deal</button>
     </section>
+
+    <section id="table-preview" aria-hidden="true">
+      <div id="preview-tables"></div>
+      <p class="hint" id="preview-note">Seats get drawn when you deal.</p>
+    </section>
+    </div>
 
     <section id="results" hidden>
       <p id="shared-note" hidden>Someone shared these seats with you. This is how the tables looked when they copied the link.</p>
@@ -541,7 +628,11 @@
   document.addEventListener("DOMContentLoaded", () => {
       const playersKey = "poker-seater-players";
       const gameKey = "poker-seater-game";
+      const setupKey = "poker-seater-setup";
       const hashPrefix = "#seats=";
+      const minPlayerCount = 2;
+      const defaultPlayerCount = 8;
+      const demoPlayerCount = 13;
       const maxPlayers = 20;
       const maxPlayersPerTable = 10;
       const maxNameLength = 40;
@@ -552,7 +643,7 @@
       const playersListDiv = document.getElementById("players-list");
       const playersUl = document.getElementById("players-ul");
       const playersCount = document.getElementById("players-count");
-      const formSection = document.getElementById("poker-form");
+      const formSection = document.getElementById("setup");
       const resultsSection = document.getElementById("results");
       const pokerTable = document.getElementById("poker-table");
       const copyButton = document.getElementById("copy-button");
@@ -565,8 +656,15 @@
       const noticeText = document.getElementById("notice-text");
       const undoButton = document.getElementById("undo-button");
       const outList = document.getElementById("out-list");
+      const modeNamesButton = document.getElementById("mode-names");
+      const modeNumberButton = document.getElementById("mode-number");
+      const namesMode = document.getElementById("names-mode");
+      const numberMode = document.getElementById("number-mode");
+      const playerCountInput = document.getElementById("player-count");
+      const previewTables = document.getElementById("preview-tables");
       const predefinedNames = ["Alice", "Bob", "Charlie", "David", "Emily", "Frank", "Grace", "Helen", "Ivan", "Jack", "Kelly", "Liam", "Maria", "Nathan", "Olivia", "Peter", "Quinn", "Rachel", "Samuel", "Teresa"];
       let pokerPlayers = loadPlayers();
+      let useNumber = false;
       let game = null;
       let isSharedView = false;
       let shuffleInterval = null;
@@ -582,10 +680,13 @@
           addPlayers();
         }
       });
-      document.getElementById("deal-button").addEventListener("click", startGame);
+      document.getElementById("deal-button").addEventListener("click", () => startGame(getDealPlayers()));
+      document.getElementById("demo-button").addEventListener("click", () => {
+        startGame(predefinedNames.slice(0, demoPlayerCount), ["This is a demo game. Tap Out next to a player to see the tables balance."]);
+      });
       reshuffleButton.addEventListener("click", () => {
         if (confirmLosingGame()) {
-          startGame();
+          startGame(activePlayers().concat(game.out));
         }
       });
       document.getElementById("clear-button").addEventListener("click", () => {
@@ -603,7 +704,14 @@
       shareButton.addEventListener("click", () => copyText(window.location.href, shareButton));
       undoButton.addEventListener("click", undoLastBust);
       window.addEventListener("hashchange", openFromUrl);
+      modeNamesButton.addEventListener("click", () => setUseNumber(false));
+      modeNumberButton.addEventListener("click", () => setUseNumber(true));
+      document.getElementById("count-down").addEventListener("click", () => setPlayerCount(getPlayerCount() - 1));
+      document.getElementById("count-up").addEventListener("click", () => setPlayerCount(getPlayerCount() + 1));
+      playerCountInput.addEventListener("input", renderPreview);
+      playerCountInput.addEventListener("change", () => setPlayerCount(getPlayerCount()));
 
+      loadSetup();
       renderPlayers();
       openFromUrl();
 
@@ -638,6 +746,101 @@
 
       function savePlayers() {
         writeStorage(playersKey, pokerPlayers);
+      }
+
+      function loadSetup() {
+        const saved = readStorage(setupKey);
+        if (saved && Number.isInteger(saved.count)) {
+          playerCountInput.value = clampPlayerCount(saved.count);
+        }
+        useNumber = Boolean(saved && saved.useNumber);
+        renderMode();
+      }
+
+      function saveSetup() {
+        writeStorage(setupKey, { useNumber, count: getPlayerCount() });
+      }
+
+      function setUseNumber(value) {
+        useNumber = value;
+        showMessage("");
+        saveSetup();
+        renderMode();
+        renderPreview();
+      }
+
+      function renderMode() {
+        modeNamesButton.setAttribute("aria-pressed", String(!useNumber));
+        modeNumberButton.setAttribute("aria-pressed", String(useNumber));
+        namesMode.hidden = useNumber;
+        numberMode.hidden = !useNumber;
+      }
+
+      function clampPlayerCount(count) {
+        return Math.min(maxPlayers, Math.max(minPlayerCount, count));
+      }
+
+      function getPlayerCount() {
+        const count = parseInt(playerCountInput.value, 10);
+        return Number.isNaN(count) ? defaultPlayerCount : clampPlayerCount(count);
+      }
+
+      function setPlayerCount(count) {
+        playerCountInput.value = clampPlayerCount(count);
+        saveSetup();
+        renderPreview();
+      }
+
+      function getDealPlayers() {
+        if (useNumber) {
+          return Array.from({ length: getPlayerCount() }, (_, index) => `Player ${index + 1}`);
+        }
+        return pokerPlayers;
+      }
+
+      function splitIntoTables(players) {
+        if (players.length <= maxPlayersPerTable) {
+          return [players];
+        }
+        const midPoint = Math.ceil(players.length / 2);
+        return [players.slice(0, midPoint), players.slice(midPoint)];
+      }
+
+      function playerCountText(count) {
+        return count === 1 ? "1 player" : `${count} players`;
+      }
+
+      function renderPreview() {
+        const players = getDealPlayers();
+        previewTables.innerHTML = "";
+        if (players.length === 0) {
+          previewTables.appendChild(createPreviewTable(tableNames[0], maxPlayersPerTable, "Add players to fill it"));
+          return;
+        }
+        splitIntoTables(players).forEach((tablePlayers, index) => {
+          previewTables.appendChild(createPreviewTable(tableNames[index], tablePlayers.length, playerCountText(tablePlayers.length)));
+        });
+      }
+
+      function createPreviewTable(tableName, seatCount, countText) {
+        const block = document.createElement("div");
+        block.className = "table-block";
+        const table = createTableShell(tableName, countText);
+        for (let index = 0; index < seatCount; index++) {
+          const seat = document.createElement("div");
+          seat.className = "seat empty";
+          placeSeat(seat, index, seatCount);
+          const number = document.createElement("span");
+          number.className = "seat-number";
+          number.textContent = index + 1;
+          const name = document.createElement("span");
+          name.className = "seat-name";
+          name.textContent = "Open";
+          seat.append(number, name);
+          table.appendChild(seat);
+        }
+        block.appendChild(table);
+        return block;
       }
 
       function parsePlayerNames(input) {
@@ -703,6 +906,7 @@
         });
         playersCount.textContent = pokerPlayers.length;
         playersListDiv.hidden = pokerPlayers.length === 0;
+        renderPreview();
       }
 
       function showMessage(message, isError = true) {
@@ -719,25 +923,19 @@
         return shuffled;
       }
 
-      function startGame() {
-        if (pokerPlayers.length === 0) {
+      function startGame(players, notes = []) {
+        if (players.length === 0) {
           showMessage("Please enter at least one player name.");
           return;
         }
         showMessage("");
 
-        const shuffledPlayers = shuffleArray(pokerPlayers);
-        let tables = [shuffledPlayers];
-
-        if (shuffledPlayers.length > maxPlayersPerTable) {
-          const midPoint = Math.ceil(shuffledPlayers.length / 2);
-          tables = [shuffledPlayers.slice(0, midPoint), shuffledPlayers.slice(midPoint)];
-        }
+        const tables = splitIntoTables(shuffleArray(players));
 
         game = { tables, out: [], history: [] };
         isSharedView = false;
         saveGame();
-        renderGame({ animate: true });
+        renderGame({ animate: true, notes });
         window.scrollTo(0, 0);
       }
 
@@ -925,14 +1123,7 @@
         notice.hidden = lines.length === 0;
       }
 
-      function createTable(tableIndex, seats, move) {
-        const players = seats.filter(seat => seat !== null);
-        const dealerIndex = seats.findIndex(seat => seat !== null);
-        const canMarkOut = !isSharedView && activePlayers().length > 1;
-
-        const block = document.createElement("div");
-        block.className = "table-block";
-
+      function createTableShell(tableName, countText) {
         const table = document.createElement("div");
         table.className = "poker-table";
         table.setAttribute("aria-hidden", "true");
@@ -941,20 +1132,36 @@
         felt.className = "felt";
         const title = document.createElement("div");
         title.className = "felt-title";
-        title.textContent = tableNames[tableIndex];
+        title.textContent = tableName;
         const count = document.createElement("div");
         count.className = "felt-count";
-        count.textContent = players.length === 1 ? "1 player" : `${players.length} players`;
+        count.textContent = countText;
         felt.append(title, count);
         table.appendChild(felt);
+        return table;
+      }
+
+      // Seat 1 sits at the bottom of the table and the rest go clockwise
+      function placeSeat(seat, index, seatCount) {
+        const angle = Math.PI / 2 + (index / seatCount) * Math.PI * 2;
+        seat.style.setProperty("--cos", Math.cos(angle).toFixed(4));
+        seat.style.setProperty("--sin", Math.sin(angle).toFixed(4));
+      }
+
+      function createTable(tableIndex, seats, move) {
+        const players = seats.filter(seat => seat !== null);
+        const dealerIndex = seats.findIndex(seat => seat !== null);
+        const canMarkOut = !isSharedView && activePlayers().length > 1;
+
+        const block = document.createElement("div");
+        block.className = "table-block";
+
+        const table = createTableShell(tableNames[tableIndex], playerCountText(players.length));
 
         seats.forEach((player, index) => {
-          // Seat 1 sits at the bottom of the table and the rest go clockwise
-          const angle = Math.PI / 2 + (index / seats.length) * Math.PI * 2;
           const seat = document.createElement("div");
           seat.className = "seat";
-          seat.style.setProperty("--cos", Math.cos(angle).toFixed(4));
-          seat.style.setProperty("--sin", Math.sin(angle).toFixed(4));
+          placeSeat(seat, index, seats.length);
 
           const number = document.createElement("span");
           number.className = "seat-number";
