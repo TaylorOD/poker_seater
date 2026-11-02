@@ -87,10 +87,11 @@
 
     .add-row {
       display: flex;
+      align-items: flex-start;
       gap: 8px;
     }
 
-    input {
+    textarea {
       flex: 1;
       min-width: 0;
       background-color: var(--room);
@@ -99,10 +100,17 @@
       color: var(--cream);
       font: inherit;
       padding: 12px;
+      resize: vertical;
     }
 
-    input::placeholder {
+    textarea::placeholder {
       color: var(--muted);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.875rem;
+      margin: 8px 0 0;
     }
 
     button {
@@ -143,7 +151,7 @@
       color: var(--cream);
     }
 
-    input:focus-visible,
+    textarea:focus-visible,
     button:focus-visible,
     a:focus-visible {
       outline: 2px solid var(--brass);
@@ -154,6 +162,10 @@
       color: var(--red);
       font-weight: 600;
       margin: 12px 0 0;
+    }
+
+    #message.info {
+      color: var(--brass);
     }
 
     #message:empty {
@@ -218,12 +230,51 @@
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
     }
 
     .actions button {
-      flex: 1;
+      flex: 1 1 40%;
       white-space: nowrap;
+    }
+
+    #shared-note {
+      color: var(--muted);
+      margin: 0 0 16px;
+      text-align: center;
+    }
+
+    .notice {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      background-color: var(--panel);
+      border: 1px solid var(--panel-line);
+      border-left: 4px solid var(--brass);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      padding: 12px 16px;
+    }
+
+    #notice-text {
+      margin: 0;
+    }
+
+    #notice-text p {
+      margin: 0;
+    }
+
+    #notice-text p + p {
+      margin-top: 4px;
+    }
+
+    #notice-text:focus {
+      outline: none;
+    }
+
+    #undo-button {
+      flex: none;
     }
 
     .table-block {
@@ -279,8 +330,6 @@
       font-weight: 600;
       max-width: 108px;
       padding: 4px 10px 4px 4px;
-      animation: deal 0.35s ease-out backwards;
-      animation-delay: calc(var(--order) * 60ms);
     }
 
     .seat-number {
@@ -300,21 +349,46 @@
       color: var(--room);
     }
 
+    .seat.empty {
+      background-color: var(--room);
+      border: 1px dashed var(--muted);
+      box-shadow: none;
+      color: var(--muted);
+      font-weight: normal;
+    }
+
+    .seat.empty .seat-number {
+      background-color: transparent;
+      color: var(--muted);
+    }
+
+    .seat.moved {
+      box-shadow: 0 0 0 3px var(--brass), 0 2px 6px rgba(0, 0, 0, 0.5);
+    }
+
+    .seat.spinning {
+      background-color: var(--panel);
+      color: var(--brass);
+    }
+
+    .seat.locked {
+      animation: lock 0.3s ease-out;
+    }
+
     .seat-name {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    @keyframes deal {
+    @keyframes lock {
       from {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.6);
+        transform: translate(-50%, -50%) scale(1.35);
       }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .seat {
+      .seat.locked {
         animation: none;
       }
     }
@@ -326,21 +400,43 @@
     }
 
     .seat-list {
-      columns: 2;
-      column-gap: 16px;
       color: var(--muted);
-      margin: 16px 0 0;
+      margin: 12px 0 0;
       padding-left: 28px;
     }
 
+    .shuffling .seat-list {
+      visibility: hidden;
+    }
+
     .seat-list li {
-      break-inside: avoid;
+      border-bottom: 1px solid var(--panel-line);
       overflow-wrap: anywhere;
-      padding: 2px 0;
+      padding: 6px 0;
+    }
+
+    .seat-list li::after {
+      clear: both;
+      content: "";
+      display: block;
     }
 
     .seat-list .player {
       color: var(--cream);
+      line-height: 2;
+    }
+
+    .out-button {
+      float: right;
+      font-size: 0.875rem;
+      margin-left: 8px;
+      padding: 4px 12px;
+    }
+
+    #out-list {
+      color: var(--muted);
+      margin: 0 0 24px;
+      overflow-wrap: anywhere;
     }
 
     @media (min-width: 640px) {
@@ -356,6 +452,19 @@
 
       .seat {
         max-width: 140px;
+      }
+
+      .seat-list {
+        columns: 2;
+        column-gap: 40px;
+      }
+
+      .seat-list li {
+        break-inside: avoid;
+      }
+
+      .actions button {
+        flex: 1;
       }
     }
 
@@ -389,9 +498,10 @@
       <form id="add-form">
         <label for="player-names">Add players</label>
         <div class="add-row">
-          <input id="player-names" type="text" autocomplete="off" placeholder="Rob, Sam, Kelly...">
+          <textarea id="player-names" rows="2" autocomplete="off" placeholder="Rob, Sam, Kelly..."></textarea>
           <button type="submit" id="add-player">Add</button>
         </div>
+        <p class="hint">Type names or paste a list from anywhere. Commas, new lines, bullets and numbers all work.</p>
       </form>
       <p id="message" role="alert"></p>
       <div id="players-list" hidden>
@@ -405,12 +515,20 @@
     </section>
 
     <section id="results" hidden>
+      <p id="shared-note" hidden>Someone shared these seats with you. This is how the tables looked when they copied the link.</p>
       <div class="actions">
         <button type="button" class="primary" id="reshuffle-button">Reshuffle</button>
         <button type="button" id="copy-button">Copy seats</button>
+        <button type="button" id="share-button">Share link</button>
         <button type="button" id="edit-button">Change players</button>
+        <button type="button" id="own-game-button" hidden>Start your own game</button>
+      </div>
+      <div class="notice" id="notice" hidden>
+        <div id="notice-text" role="status" tabindex="-1"></div>
+        <button type="button" class="link" id="undo-button">Undo</button>
       </div>
       <div id="poker-table"></div>
+      <p id="out-list" hidden></p>
     </section>
   </main>
 
@@ -421,9 +539,13 @@
   <script>
 
   document.addEventListener("DOMContentLoaded", () => {
-      const storageKey = "poker-seater-players";
+      const playersKey = "poker-seater-players";
+      const gameKey = "poker-seater-game";
+      const hashPrefix = "#seats=";
       const maxPlayers = 20;
       const maxPlayersPerTable = 10;
+      const maxNameLength = 40;
+      const tableNames = ["Table One", "Table Two"];
       const addForm = document.getElementById("add-form");
       const playerNameInput = document.getElementById("player-names");
       const messageEl = document.getElementById("message");
@@ -434,45 +556,95 @@
       const resultsSection = document.getElementById("results");
       const pokerTable = document.getElementById("poker-table");
       const copyButton = document.getElementById("copy-button");
+      const shareButton = document.getElementById("share-button");
+      const reshuffleButton = document.getElementById("reshuffle-button");
+      const editButton = document.getElementById("edit-button");
+      const ownGameButton = document.getElementById("own-game-button");
+      const sharedNote = document.getElementById("shared-note");
+      const notice = document.getElementById("notice");
+      const noticeText = document.getElementById("notice-text");
+      const undoButton = document.getElementById("undo-button");
+      const outList = document.getElementById("out-list");
       const predefinedNames = ["Alice", "Bob", "Charlie", "David", "Emily", "Frank", "Grace", "Helen", "Ivan", "Jack", "Kelly", "Liam", "Maria", "Nathan", "Olivia", "Peter", "Quinn", "Rachel", "Samuel", "Teresa"];
       let pokerPlayers = loadPlayers();
-      let seatingText = "";
+      let game = null;
+      let isSharedView = false;
+      let shuffleInterval = null;
+      let shuffleTimeouts = [];
 
       addForm.addEventListener("submit", (event) => {
         event.preventDefault();
         addPlayers();
       });
-      document.getElementById("deal-button").addEventListener("click", dealTables);
-      document.getElementById("reshuffle-button").addEventListener("click", dealTables);
+      playerNameInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+          event.preventDefault();
+          addPlayers();
+        }
+      });
+      document.getElementById("deal-button").addEventListener("click", startGame);
+      reshuffleButton.addEventListener("click", () => {
+        if (confirmLosingGame()) {
+          startGame();
+        }
+      });
       document.getElementById("clear-button").addEventListener("click", () => {
         pokerPlayers = [];
         savePlayers();
         renderPlayers();
       });
-      document.getElementById("edit-button").addEventListener("click", () => {
-        resultsSection.hidden = true;
-        formSection.hidden = false;
-        playerNameInput.focus();
+      editButton.addEventListener("click", () => {
+        if (confirmLosingGame()) {
+          leaveGame();
+        }
       });
-      copyButton.addEventListener("click", copySeats);
+      ownGameButton.addEventListener("click", leaveGame);
+      copyButton.addEventListener("click", () => copyText(createSeatingText(), copyButton));
+      shareButton.addEventListener("click", () => copyText(window.location.href, shareButton));
+      undoButton.addEventListener("click", undoLastBust);
+      window.addEventListener("hashchange", openFromUrl);
 
       renderPlayers();
+      openFromUrl();
 
-      function loadPlayers() {
+      function readStorage(key) {
         try {
-          const saved = JSON.parse(localStorage.getItem(storageKey));
-          return Array.isArray(saved) ? saved.filter(name => typeof name === "string").slice(0, maxPlayers) : [];
+          return JSON.parse(localStorage.getItem(key));
         } catch (error) {
-          return [];
+          return null;
         }
       }
 
-      function savePlayers() {
+      function writeStorage(key, value) {
         try {
-          localStorage.setItem(storageKey, JSON.stringify(pokerPlayers));
+          localStorage.setItem(key, JSON.stringify(value));
         } catch (error) {
-          // The list just wont be remembered next time
+          // It just wont be remembered next time
         }
+      }
+
+      function removeStorage(key) {
+        try {
+          localStorage.removeItem(key);
+        } catch (error) {
+          // Nothing was saved then
+        }
+      }
+
+      function loadPlayers() {
+        const saved = readStorage(playersKey);
+        return Array.isArray(saved) ? saved.filter(name => typeof name === "string").slice(0, maxPlayers) : [];
+      }
+
+      function savePlayers() {
+        writeStorage(playersKey, pokerPlayers);
+      }
+
+      function parsePlayerNames(input) {
+        return input
+          .split(/[,;\t\r\n]+/)
+          .map(name => name.replace(/^\s*(?:[-*•·]+|\d+[.)])\s*/, "").trim().slice(0, maxNameLength))
+          .filter(name => name);
       }
 
       function addPlayers() {
@@ -482,17 +654,29 @@
         if (input.toLowerCase() === "test, test" && pokerPlayers.length === 0) {
           playerNames = predefinedNames;
         } else {
-          playerNames = input.split(",").map(name => name.trim()).filter(name => name);
+          playerNames = parsePlayerNames(input);
         }
 
-        if (pokerPlayers.length + playerNames.length > maxPlayers) {
+        const seen = new Set(pokerPlayers.map(name => name.toLowerCase()));
+        const newNames = [];
+        const duplicates = [];
+        playerNames.forEach(name => {
+          if (seen.has(name.toLowerCase())) {
+            duplicates.push(name);
+          } else {
+            seen.add(name.toLowerCase());
+            newNames.push(name);
+          }
+        });
+
+        if (pokerPlayers.length + newNames.length > maxPlayers) {
           showMessage(`Cannot add more than ${maxPlayers} players.`);
           return;
         }
 
-        pokerPlayers = pokerPlayers.concat(playerNames);
+        pokerPlayers = pokerPlayers.concat(newNames);
         playerNameInput.value = "";
-        showMessage("");
+        showMessage(duplicates.length ? `Already added: ${duplicates.join(", ")}.` : "", false);
         savePlayers();
         renderPlayers();
       }
@@ -521,11 +705,21 @@
         playersListDiv.hidden = pokerPlayers.length === 0;
       }
 
-      function showMessage(message) {
+      function showMessage(message, isError = true) {
         messageEl.textContent = message;
+        messageEl.classList.toggle("info", !isError);
       }
 
-      function dealTables() {
+      function shuffleArray(array) {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+      }
+
+      function startGame() {
         if (pokerPlayers.length === 0) {
           showMessage("Please enter at least one player name.");
           return;
@@ -540,26 +734,202 @@
           tables = [shuffledPlayers.slice(0, midPoint), shuffledPlayers.slice(midPoint)];
         }
 
-        const tableNames = ["Table One", "Table Two"];
+        game = { tables, out: [], history: [] };
+        isSharedView = false;
+        saveGame();
+        renderGame({ animate: true });
+        window.scrollTo(0, 0);
+      }
+
+      function confirmLosingGame() {
+        return !game || game.out.length === 0 || window.confirm("This will lose who is out and any table moves. Keep going?");
+      }
+
+      function leaveGame() {
+        cancelShuffle();
+        if (!isSharedView) {
+          removeStorage(gameKey);
+        }
+        game = null;
+        isSharedView = false;
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+        showForm();
+      }
+
+      function showForm() {
+        resultsSection.hidden = true;
+        formSection.hidden = false;
+        playerNameInput.focus();
+      }
+
+      function saveGame() {
+        writeStorage(gameKey, game);
+        window.history.replaceState(null, "", hashPrefix + encodeTables(game.tables));
+      }
+
+      function encodeTables(tables) {
+        const bytes = new TextEncoder().encode(JSON.stringify(tables));
+        return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      }
+
+      function decodeTables(encoded) {
+        try {
+          const binary = atob(encoded.replace(/-/g, "+").replace(/_/g, "/"));
+          const bytes = Uint8Array.from(binary, character => character.charCodeAt(0));
+          const tables = JSON.parse(new TextDecoder().decode(bytes));
+          return areValidTables(tables) ? tables : null;
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function areValidTables(tables) {
+        if (!Array.isArray(tables) || tables.length < 1 || tables.length > tableNames.length) {
+          return false;
+        }
+        const allSeats = tables.flat();
+        const players = allSeats.filter(seat => seat !== null);
+        return tables.every(Array.isArray)
+          && allSeats.length <= maxPlayers + tableNames.length
+          && players.length >= 1
+          && players.length <= maxPlayers
+          && players.every(name => typeof name === "string" && name.length > 0 && name.length <= maxNameLength);
+      }
+
+      function openFromUrl() {
+        cancelShuffle();
+        const hash = window.location.hash;
+        const tables = hash.startsWith(hashPrefix) ? decodeTables(hash.slice(hashPrefix.length)) : null;
+
+        if (!tables) {
+          game = null;
+          isSharedView = false;
+          resultsSection.hidden = true;
+          formSection.hidden = false;
+          return;
+        }
+
+        // The person running the game gets their controls back when they reload their own link
+        const saved = readStorage(gameKey);
+        if (saved && Array.isArray(saved.tables) && JSON.stringify(saved.tables) === JSON.stringify(tables)) {
+          game = { tables: saved.tables, out: saved.out || [], history: saved.history || [] };
+          isSharedView = false;
+        } else {
+          game = { tables, out: [], history: [] };
+          isSharedView = true;
+        }
+        renderGame();
+      }
+
+      function activePlayers(tables = game.tables) {
+        return tables.flat().filter(seat => seat !== null);
+      }
+
+      function markPlayerOut(tableIndex, seatIndex) {
+        const name = game.tables[tableIndex][seatIndex];
+        game.history.push(JSON.stringify({ tables: game.tables, out: game.out }));
+        game.tables[tableIndex][seatIndex] = null;
+        game.out.push(name);
+
+        const notes = [`${name} is out.`];
+        let move = null;
+        let animate = false;
+        const remaining = activePlayers();
+
+        if (remaining.length === 1) {
+          notes.push(`${remaining[0]} wins!`);
+        } else if (game.tables.length === 2 && remaining.length <= maxPlayersPerTable) {
+          game.tables = [shuffleArray(remaining)];
+          notes.push(`Down to ${remaining.length} players. Final table, everyone gets a new seat.`);
+          animate = true;
+        } else if (game.tables.length === 2) {
+          move = balanceTables();
+          if (move) {
+            notes.push(`Move ${move.player} from ${tableNames[move.fromTable]} seat ${move.fromSeat + 1} to ${tableNames[move.toTable]} seat ${move.toSeat + 1}.`);
+          }
+        }
+
+        saveGame();
+        renderGame({ animate, notes, move });
+        noticeText.focus({ preventScroll: true });
+      }
+
+      function balanceTables() {
+        const counts = game.tables.map(table => table.filter(seat => seat !== null).length);
+        if (Math.abs(counts[0] - counts[1]) < 2) {
+          return null;
+        }
+
+        const fromTable = counts[0] > counts[1] ? 0 : 1;
+        const toTable = 1 - fromTable;
+        const occupiedSeats = seatIndexes(game.tables[fromTable], seat => seat !== null);
+        const fromSeat = occupiedSeats[Math.floor(Math.random() * occupiedSeats.length)];
+        const emptySeats = seatIndexes(game.tables[toTable], seat => seat === null);
+        const toSeat = emptySeats.length
+          ? emptySeats[Math.floor(Math.random() * emptySeats.length)]
+          : game.tables[toTable].length;
+        const player = game.tables[fromTable][fromSeat];
+
+        game.tables[fromTable][fromSeat] = null;
+        game.tables[toTable][toSeat] = player;
+        return { player, fromTable, fromSeat, toTable, toSeat };
+      }
+
+      function seatIndexes(table, matches) {
+        return table.map((seat, index) => (matches(seat) ? index : -1)).filter(index => index !== -1);
+      }
+
+      function undoLastBust() {
+        const previous = JSON.parse(game.history.pop());
+        game.tables = previous.tables;
+        game.out = previous.out;
+        saveGame();
+        renderGame({ notes: ["Undone."] });
+      }
+
+      function renderGame({ animate = false, notes = [], move = null } = {}) {
+        cancelShuffle();
         pokerTable.innerHTML = "";
-        tables.forEach((players, index) => pokerTable.appendChild(createTable(tableNames[index], players)));
-        seatingText = tables.map((players, index) => createSeatingText(tableNames[index], players)).join("\n\n");
+        game.tables.forEach((seats, tableIndex) => {
+          pokerTable.appendChild(createTable(tableIndex, seats, move));
+        });
+
+        renderNotice(notes);
+        outList.textContent = `Out: ${game.out.join(", ")}`;
+        outList.hidden = game.out.length === 0;
 
         copyButton.textContent = "Copy seats";
+        shareButton.textContent = "Share link";
+        reshuffleButton.hidden = isSharedView;
+        editButton.hidden = isSharedView;
+        ownGameButton.hidden = !isSharedView;
+        sharedNote.hidden = !isSharedView;
         formSection.hidden = true;
         resultsSection.hidden = false;
-      }
 
-      function shuffleArray(array) {
-        const shuffled = [...array];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        if (animate) {
+          runShuffleAnimation();
         }
-        return shuffled;
       }
 
-      function createTable(tableName, players) {
+      function renderNotice(notes) {
+        noticeText.innerHTML = "";
+        const canUndo = !isSharedView && game.history.length > 0;
+        const lines = notes.length === 0 && canUndo ? ["Marked someone out by mistake? You can undo it."] : notes;
+        lines.forEach(note => {
+          const line = document.createElement("p");
+          line.textContent = note;
+          noticeText.appendChild(line);
+        });
+        undoButton.hidden = !canUndo;
+        notice.hidden = lines.length === 0;
+      }
+
+      function createTable(tableIndex, seats, move) {
+        const players = seats.filter(seat => seat !== null);
+        const dealerIndex = seats.findIndex(seat => seat !== null);
+        const canMarkOut = !isSharedView && activePlayers().length > 1;
+
         const block = document.createElement("div");
         block.className = "table-block";
 
@@ -571,44 +941,66 @@
         felt.className = "felt";
         const title = document.createElement("div");
         title.className = "felt-title";
-        title.textContent = tableName;
+        title.textContent = tableNames[tableIndex];
         const count = document.createElement("div");
         count.className = "felt-count";
         count.textContent = players.length === 1 ? "1 player" : `${players.length} players`;
         felt.append(title, count);
         table.appendChild(felt);
 
-        players.forEach((player, index) => {
+        seats.forEach((player, index) => {
           // Seat 1 sits at the bottom of the table and the rest go clockwise
-          const angle = Math.PI / 2 + (index / players.length) * Math.PI * 2;
+          const angle = Math.PI / 2 + (index / seats.length) * Math.PI * 2;
           const seat = document.createElement("div");
-          seat.className = index === 0 ? "seat dealer" : "seat";
+          seat.className = "seat";
           seat.style.setProperty("--cos", Math.cos(angle).toFixed(4));
           seat.style.setProperty("--sin", Math.sin(angle).toFixed(4));
-          seat.style.setProperty("--order", index);
-          seat.title = player;
 
           const number = document.createElement("span");
           number.className = "seat-number";
-          number.textContent = index === 0 ? "D" : index + 1;
+          number.textContent = index === dealerIndex ? "D" : index + 1;
           const name = document.createElement("span");
           name.className = "seat-name";
-          name.textContent = player;
+
+          if (player === null) {
+            seat.classList.add("empty");
+            name.textContent = "Empty";
+          } else {
+            seat.title = player;
+            seat.dataset.player = player;
+            name.textContent = player;
+            seat.classList.toggle("dealer", index === dealerIndex);
+            seat.classList.toggle("moved", Boolean(move) && move.toTable === tableIndex && move.toSeat === index);
+          }
+
           seat.append(number, name);
           table.appendChild(seat);
         });
 
         const heading = document.createElement("h2");
         heading.className = "table-heading";
-        heading.textContent = tableName;
+        heading.textContent = tableNames[tableIndex];
 
         const list = document.createElement("ol");
         list.className = "seat-list";
-        players.forEach((player, index) => {
+        seats.forEach((player, index) => {
+          if (player === null) {
+            return;
+          }
           const item = document.createElement("li");
+          item.value = index + 1;
+          if (canMarkOut) {
+            const outButton = document.createElement("button");
+            outButton.type = "button";
+            outButton.className = "out-button";
+            outButton.textContent = "Out";
+            outButton.setAttribute("aria-label", `Mark ${player} as out`);
+            outButton.addEventListener("click", () => markPlayerOut(tableIndex, index));
+            item.appendChild(outButton);
+          }
           const name = document.createElement("span");
           name.className = "player";
-          name.textContent = index === 0 ? `${player} (dealer)` : player;
+          name.textContent = index === dealerIndex ? `${player} (dealer)` : player;
           item.appendChild(name);
           list.appendChild(item);
         });
@@ -617,26 +1009,70 @@
         return block;
       }
 
-      function createSeatingText(tableName, players) {
-        const seats = players.map((player, index) => {
-          return `Seat ${index + 1}: ${player}${index === 0 ? " (dealer)" : ""}`;
+      // The seats are already decided by this point. This only makes the reveal fun to watch
+      function runShuffleAnimation() {
+        const seats = [...pokerTable.querySelectorAll(".seat:not(.empty)")];
+        const names = activePlayers();
+        if (seats.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          return;
+        }
+
+        const stepMs = Math.min(150, 1800 / seats.length);
+        pokerTable.classList.add("shuffling");
+        seats.forEach(seat => seat.classList.add("spinning"));
+        shuffleInterval = setInterval(() => {
+          pokerTable.querySelectorAll(".seat.spinning .seat-name").forEach(name => {
+            name.textContent = names[Math.floor(Math.random() * names.length)];
+          });
+        }, 80);
+
+        shuffleArray(seats).forEach((seat, index) => {
+          shuffleTimeouts.push(setTimeout(() => lockSeat(seat), 600 + index * stepMs));
         });
-        return [`${tableName}:`, ...seats].join("\n");
+        shuffleTimeouts.push(setTimeout(cancelShuffle, 600 + seats.length * stepMs));
       }
 
-      async function copySeats() {
+      function lockSeat(seat) {
+        seat.classList.remove("spinning");
+        seat.classList.add("locked");
+        seat.querySelector(".seat-name").textContent = seat.dataset.player;
+      }
+
+      function cancelShuffle() {
+        clearInterval(shuffleInterval);
+        shuffleTimeouts.forEach(clearTimeout);
+        shuffleInterval = null;
+        shuffleTimeouts = [];
+        pokerTable.querySelectorAll(".seat.spinning").forEach(lockSeat);
+        pokerTable.classList.remove("shuffling");
+      }
+
+      function createSeatingText() {
+        return game.tables.map((seats, tableIndex) => {
+          const dealerIndex = seats.findIndex(seat => seat !== null);
+          const lines = [`${tableNames[tableIndex]}:`];
+          seats.forEach((player, index) => {
+            if (player !== null) {
+              lines.push(`Seat ${index + 1}: ${player}${index === dealerIndex ? " (dealer)" : ""}`);
+            }
+          });
+          return lines.join("\n");
+        }).join("\n\n");
+      }
+
+      async function copyText(text, button) {
         try {
-          await navigator.clipboard.writeText(seatingText);
-          copyButton.textContent = "Copied!";
+          await navigator.clipboard.writeText(text);
+          button.textContent = "Copied!";
         } catch (error) {
-          copyButton.textContent = copyWithTextarea() ? "Copied!" : "Could not copy";
+          button.textContent = copyWithTextarea(text) ? "Copied!" : "Could not copy";
         }
       }
 
       // Backup for browsers that block the clipboard API
-      function copyWithTextarea() {
+      function copyWithTextarea(text) {
         const textarea = document.createElement("textarea");
-        textarea.value = seatingText;
+        textarea.value = text;
         textarea.style.position = "fixed";
         textarea.style.opacity = "0";
         document.body.appendChild(textarea);
