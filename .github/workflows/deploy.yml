@@ -1,0 +1,23 @@
+name: Deploy site
+
+on:
+  push:
+    branches:
+      - master
+
+concurrency: deploy-site
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Deploy to gh-pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: .
+          branch: gh-pages
+          clean-exclude: pr-preview/
+          force: false
