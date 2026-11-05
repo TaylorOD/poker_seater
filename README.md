@@ -32,6 +32,8 @@ Share links are a snapshot, so if someone busts you need to send a new one.
 
 It's all one index.html file with plain HTML, CSS and JavaScript. No framework and no build step. It's hosted on GitHub Pages.
 
+The tests use Playwright and http-server. GitHub Actions runs the tests, deploys the site and builds PR previews with [pr-preview-action](https://github.com/rossjrw/pr-preview-action). There are no paid services or API keys.
+
 The first version was in Ruby and it's still here. You can run it in your terminal with `ruby poker_seater.rb`.
 
 ## Running it locally
