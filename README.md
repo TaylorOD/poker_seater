@@ -6,6 +6,8 @@ I built this for my weekly poker game. We needed a way to randomize where player
 
 It also keeps my poker buddies from thinking I give myself the best seat every week.
 
+![Poker Seater after hitting Demo](screenshots/demo.jpg)
+
 ## How?
 
 Use it at [poker seater](https://www.taylordorsett.com/poker_seater/).
@@ -53,3 +55,7 @@ npm test
 ```
 
 If you want to try it with a full list by hand, type `test, test` in the names box and it adds 20 players.
+
+## License
+
+MIT license.
