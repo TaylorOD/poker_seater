@@ -1,6 +1,7 @@
 {
   "name": "poker-seater",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "test": "playwright test"
   },
